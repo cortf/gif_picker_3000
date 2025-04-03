@@ -59,7 +59,6 @@ async function fetchUniqueFavorites(count: number): Promise<Gif[]> {
   return results;
 }
 
-// Helper to derive a meaningful error message.
 function getErrorMessage(err: unknown, defaultMsg: string): string {
   if (err instanceof Error) {
     return err.message || defaultMsg;
