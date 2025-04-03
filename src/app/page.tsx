@@ -7,16 +7,16 @@ import { useGifFetch } from "../hooks/useGifFetch";
 import RefreshButton from "@/components/RefreshButton";
 
 // debounce function for updating URL query.
-function debounce(
-  func: (value: string) => void,
+function debounce<T extends (...args: string[]) => void>(
+  func: T,
   wait: number
-): (value: string) => void {
-  let timeout: number | null = null;
-  return (value: string): void => {
+): (...args: Parameters<T>) => void {
+  let timeout: ReturnType<typeof setTimeout> | null = null;
+  return (...args: Parameters<T>): void => {
     if (timeout !== null) {
       clearTimeout(timeout);
     }
-    timeout = setTimeout(() => func(value), wait);
+    timeout = setTimeout(() => func(...args), wait);
   };
 }
 
@@ -28,6 +28,7 @@ export default function Home() {
   const [refreshFavorites, setRefreshFavorites] = useState<number>(0);
 
   // Update the URL query: push "/search/<query>" when there is a value.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const updateQuery = useCallback(
     debounce<(value: string) => void>((value: string) => {
       const newUrl = value ? `/search/${encodeURIComponent(value)}` : "/";
