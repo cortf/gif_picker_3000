@@ -66,10 +66,15 @@ function getErrorMessage(err: unknown, defaultMsg: string): string {
   return defaultMsg;
 }
 
-export function useGifFetch(search: string, refresh: number = 0) {
+export function useGifFetch(
+  search: string,
+  refresh: number = 0,
+  page: number = 0
+) {
   const [gifs, setGifs] = useState<Gif[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const limit = 9; // number of GIFs to load per page
 
   useEffect(() => {
     if (!search.trim()) {
@@ -96,18 +101,21 @@ export function useGifFetch(search: string, refresh: number = 0) {
       const timer = setTimeout(() => {
         const fetchGifs = async (): Promise<void> => {
           try {
+            const offset = page * limit;
             const response = await fetch(
               `https://api.giphy.com/v1/gifs/search?api_key=${API_KEY}&q=${encodeURIComponent(
                 search
-              )}&limit=12`
+              )}&limit=${limit}&offset=${offset}`
             );
             if (!response.ok) {
               if (response.status === 429) {
                 setError("API limit reached. Try again later");
-                // Leave previous GIFs intact on rate limit errors.
+                // Do not clear existing gifs on rate limit errors.
               } else {
                 setError("Failed to fetch GIFs");
-                setGifs([]); // Clear GIFs for non-429 errors.
+                if (page === 0) {
+                  setGifs([]);
+                }
               }
               setLoading(false);
               return;
@@ -118,29 +126,30 @@ export function useGifFetch(search: string, refresh: number = 0) {
               mp4Url: gif.images.downsized_small.mp4,
               originalUrl: gif.url,
             }));
-            // If no GIFs are returned, we don't treat it as an error.
-            if (fetchedGifs.length === 0) {
-              setError(null);
-              setGifs([]);
-            } else {
-              setError(null);
+            setError(null);
+            if (page === 0) {
               setGifs(fetchedGifs);
+            } else {
+              // Append new results to existing list.
+              setGifs((prev) => [...prev, ...fetchedGifs]);
             }
           } catch (err) {
             console.error("Error fetching GIFs:", err);
             setError(getErrorMessage(err, "Failed to fetch GIFs"));
-            setGifs([]);
+            if (page === 0) {
+              setGifs([]);
+            }
           } finally {
             setLoading(false);
           }
         };
 
         fetchGifs();
-      }, 300);
+      }, 500);
 
       return () => clearTimeout(timer);
     }
-  }, [search, refresh]);
+  }, [search, refresh, page]);
 
   return { gifs, loading, error };
 }

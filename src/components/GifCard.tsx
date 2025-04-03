@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 
 interface GifCardProps {
   mp4Url: string;
   originalUrl: string;
 }
 
-export default function GifCard({ mp4Url, originalUrl }: GifCardProps) {
+function GifCard({ mp4Url, originalUrl }: GifCardProps) {
   const [copied, setCopied] = useState<boolean>(false);
 
   const handleCopy = async (): Promise<void> => {
@@ -62,12 +62,12 @@ export default function GifCard({ mp4Url, originalUrl }: GifCardProps) {
               viewBox="0 0 25 25"
               fill="none"
               strokeWidth="2"
-              stroke={"#ffffff"}
+              stroke="#ffffff"
               strokeLinecap="round"
               strokeLinejoin="round"
             >
-              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
             </svg>
             Copy URL
           </>
@@ -76,3 +76,5 @@ export default function GifCard({ mp4Url, originalUrl }: GifCardProps) {
     </div>
   );
 }
+
+export default React.memo(GifCard);

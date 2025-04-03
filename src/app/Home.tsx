@@ -1,10 +1,11 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useCallback, ChangeEvent, useEffect } from "react";
+import { useState, useCallback, ChangeEvent, useEffect, useRef } from "react";
 import GifCard from "../components/GifCard";
 import { useGifFetch } from "../hooks/useGifFetch";
 import RefreshButton from "@/components/RefreshButton";
+import Link from "next/link";
 
 // debounce function for updating URL query.
 function debounce<T extends (...args: string[]) => void>(
@@ -26,14 +27,20 @@ export default function Home() {
   const initialSearch: string = searchParams.get("search") || "";
   const [search, setSearch] = useState<string>(initialSearch);
   const [refreshFavorites, setRefreshFavorites] = useState<number>(0);
+  const [page, setPage] = useState<number>(0);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  // When search changes, reset page to 0.
+  useEffect(() => {
+    setPage(0);
+  }, [search]);
 
   // Update the URL query: push "/?search=<query>" when there is a value.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const updateQuery = useCallback(
     debounce<(value: string) => void>((value: string) => {
       const newUrl = value ? `/?search=${encodeURIComponent(value)}` : "/";
       router.push(newUrl);
-    }, 300),
+    }, 500),
     [router]
   );
 
@@ -41,23 +48,64 @@ export default function Home() {
     updateQuery(search);
   }, [search, updateQuery]);
 
-  const { gifs, loading, error } = useGifFetch(search, refreshFavorites);
+  // Use the custom hook, passing the current page for pagination.
+  const { gifs, loading, error } = useGifFetch(search, refreshFavorites, page);
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>): void => {
     setSearch(event.target.value);
   };
 
+  // Clear search field
+  const handleClear = () => {
+    setSearch("");
+  };
+
+  // Setup an IntersectionObserver to trigger loading more results.
+  useEffect(() => {
+    if (loading || !search.trim()) return;
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          setPage((prev) => prev + 1);
+        }
+      });
+    });
+    const currentSentinel = sentinelRef.current;
+    if (currentSentinel) {
+      observer.observe(currentSentinel);
+    }
+    return () => {
+      if (currentSentinel) {
+        observer.unobserve(currentSentinel);
+      }
+    };
+  }, [loading, search]);
+
   return (
     <div className="min-h-screen p-12 bg-gray-50">
-      <h1 className="text-3xl font-bold mb-10 text-center">GIF Picker 3000</h1>
-      <div className="max-w-md mx-auto flex items-center justify-between">
+      <h1 className="text-3xl font-bold mb-10 text-center">
+        <Link href="/" onClick={handleClear}>
+          GIF Picker 3000
+        </Link>
+      </h1>
+      <div className="max-w-md mx-auto relative">
         <input
           type="text"
           value={search}
           onChange={handleChange}
           placeholder="Search for a GIF..."
-          className="w-full p-3 border border-gray-300 rounded-full focus:outline-none focus:ring focus:border-blue-300"
+          className="w-full py-3 pl-5 border border-gray-300 rounded-full focus:outline-none focus:ring focus:border-blue-300"
         />
+
+        {search && (
+          <button
+            onClick={handleClear}
+            className="absolute inset-y-0 right-0 font-bold flex items-center text-gray-500 hover:text-gray-700 pr-5"
+            aria-label="Clear search"
+          >
+            &times;
+          </button>
+        )}
       </div>
 
       {!search.trim() && !error && (
@@ -68,7 +116,7 @@ export default function Home() {
         {error && (
           <p className="col-span-full text-center text-red-500">{error}</p>
         )}
-        {loading ? (
+        {loading && page === 0 ? (
           <p className="col-span-full text-center">Loading...</p>
         ) : (
           gifs.map((gif) => (
@@ -81,10 +129,15 @@ export default function Home() {
         )}
         {gifs.length === 0 && !error && !loading && (
           <p className="col-span-full text-center">
-            No results found. Try a different search
+            No results found. Try a different search.
           </p>
         )}
       </div>
+      {/* Sentinel for infinite scroll */}
+      {search.trim() && <div ref={sentinelRef} className="h-10" />}
+      {loading && page > 0 && (
+        <p className="col-span-full text-center mt-4">Loading more...</p>
+      )}
     </div>
   );
 }
