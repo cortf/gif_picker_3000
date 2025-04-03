@@ -1,5 +1,0 @@
-[[redirects]]
-  from = "/search/:query"
-  to = "/?search=:query"
-  status = 200
-  force = true

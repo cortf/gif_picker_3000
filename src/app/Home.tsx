@@ -27,11 +27,11 @@ export default function Home() {
   const [search, setSearch] = useState<string>(initialSearch);
   const [refreshFavorites, setRefreshFavorites] = useState<number>(0);
 
-  // Update the URL query: push "/search/<query>" when there is a value.
+  // Update the URL query: push "/?search=<query>" when there is a value.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const updateQuery = useCallback(
     debounce<(value: string) => void>((value: string) => {
-      const newUrl = value ? `/search/${encodeURIComponent(value)}` : "/";
+      const newUrl = value ? `/?search=${encodeURIComponent(value)}` : "/";
       router.push(newUrl);
     }, 300),
     [router]
