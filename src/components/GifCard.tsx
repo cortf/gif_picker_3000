@@ -25,6 +25,7 @@ function GifCard({ mp4Url, originalUrl }: GifCardProps) {
       <div className="flex flex-grow items-center justify-center">
         <video
           src={mp4Url}
+          preload="metadata"
           autoPlay
           loop
           muted

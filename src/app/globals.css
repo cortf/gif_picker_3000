@@ -1,1 +1,10 @@
 @import "tailwindcss";
+.title {
+  font-size: 3rem;
+  font-weight: bold;
+  letter-spacing: 2px;
+  color: rgb(192, 195, 197);
+  position: relative;
+  text-shadow: 1px 1px 0 #000, 2px 2px 0 #000, 3px 3px 0 #000, 4px 4px 0 #000;
+  transform: perspective(600px) rotateX(5deg) rotateY(5deg);
+}

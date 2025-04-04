@@ -90,7 +90,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen p-12 bg-gray-50">
-      <h1 className="text-3xl font-bold mb-10 text-center">
+      <h1 className="title mb-10 text-center">
         <Link href="/" onClick={handleClear}>
           GIF Picker 3000
         </Link>
@@ -136,8 +136,8 @@ export default function Home() {
       )}
 
       {/* If a non api limit error occurred OR no search results, display recommended GIFs */}
-      {((error && error !== "API limit reached. Try again later") ||
-        (!loading && gifs.length === 0 && search.trim())) && (
+      {(!loading && page === 0 && gifs.length === 0 && search.trim()) ||
+      (error && error !== "API limit reached. Try again later") ? (
         <div className="max-w-4xl mx-auto mt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           <h3 className="col-span-full text-center mt-6">
             For GIFs that DO exist, here are a few you can check out...
@@ -158,7 +158,7 @@ export default function Home() {
             <p className="col-span-full text-center text-red-500">{recError}</p>
           ) : null}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }
